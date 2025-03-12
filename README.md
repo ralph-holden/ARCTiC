@@ -46,11 +46,11 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
 
 ## Arguments:
 1. `--input_ts` `<path to input .mrc file>` (Required)
-   - **Description:** Path to the input `.mrc` file, which contains the tomogram data to be processed.
+   - **Description:** Path to the input `.mrc` file, which contains the tilt series data to be processed.
    - **Example:** `'input_TS.mrc'`
 
 2. `--cleaned_ts` `<path to output .mrc file>` (Required)
-   - **Description:** Path to the output `.mrc` file where the cleaned and processed 3D volume will be saved.
+   - **Description:** Path to the output `.mrc` file where the cleaned tilt series will be saved.
    - **Example:** `'cleaned_TS.mrc'`
 
 3. `--angle_start` `<float>` (Optional, default: `-50`)
@@ -72,11 +72,11 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
 
 ### This command will:
 
-1. Load the input tomogram data from `input_TS.mrc`.
+1. Load the input tilt series data from `input_TS.mrc`.
 2. Use the `swin_tiny_fine_tuned.pth` model to clean TS and visualize tilt angles.
 3. Start tilt visualization at `-50` degrees with a step of `2` degrees.
 4. Generate and save the visualizations (tilt angle and classification probability scale bars) into `output_visualization.pdf`.
-5. Save the cleaned 3D volume to `cleaned_TS.mrc`.
+5. Save the cleaned tilt series to `cleaned_TS.mrc`.
 
 
 ## Additional Notes
