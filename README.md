@@ -54,11 +54,11 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
    - **Example:** `'cleaned_TS.mrc'`
 
 3. `--angle_start` `<float>` (Optional, default: `-50`)
-   - **Description:** The starting tilt angle for visualizing tilt images. This angle will be used as the base for the tilt angles applied to each slice during processing.
+   - **Description:** The starting tilt angle for visualizing tilt images. 
    - **Example:** `-50`
 
 4. `--angle_step` `<float>` (Optional, default: `2`)
-   - **Description:** The increment (step size) for the tilt angles between consecutive slices. This defines how much the tilt angle changes for each slice.
+   - **Description:** The increment (step size) for the tilt angles between consecutive tilts.
    - **Example:** `2`
 
 5. `--pdf_output` `<path to output PDF file>` (Required)
@@ -78,6 +78,7 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
 4. Generate and save the visualizations (tilt angle and classification probability scale bars) into `output_visualization.pdf`.
 5. Save the cleaned 3D volume to `cleaned_TS.mrc`.
 
+
 ## Additional Notes
 
 - Ensure that the model file (`.pth`) is compatible with the architecture defined in the script (e.g., `swin_tiny` or `swin_large`).
@@ -85,4 +86,17 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
 - The `--pdf_output` argument generates a PDF containing the tilt angle visualization and image classifications for easy review.
 
 
+## Jupyter Notebooks
 
+- In the `notebooks` directory, there are additional jupyter notebooks that were used for augmentation (`augmentation.ipynb`), data split ('split_train_val_test.ipynb'), and examples of training and evaluation scripts.
+
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+### GNU General Public License v3.0
+
+This project is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.html) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This project is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.html) for more details.
