@@ -23,17 +23,17 @@ The environment is based on Python 3.10 and uses Conda (conda-forge channel) wit
 CUDA-Enabled PyTorch: The environment uses torch==2.5.0+cu118 (CUDA 11.8).
 
 
-## Fine-trained Models
+## Fine-tuned Models
 
-*   Create a directory with fine-trained models.
+*   Create a directory with fine-tuned models.
 
 ```
 mkdir -p <models>
 ```
 
-*   Download fine-trained binary and multiclass models from 
+*   Download fine-tuned binary and multiclass models from 
     [owncloud](https://oc.biophys.mpg.de/owncloud/s/zmMZPr2TEB4Bwda)
-    and put them into `<models>`.
+    and put them into `<models>`. Models are currently available only to reviewers and will be accessible upon publication.
 
 
 ## Usage
@@ -88,7 +88,7 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
 
 ## Jupyter Notebooks
 
-- In the `notebooks` directory, there are additional jupyter notebooks that were used for augmentation (`augmentation.ipynb`), data split (`split_train_val_test.ipynb`), and examples of training and evaluation scripts.
+- In the `notebooks` directory, there are additional Jupyter Notebooks that were used for augmentation (`augmentation.ipynb`), data split (`split_train_val_test.ipynb`), and examples of training and evaluation scripts.
 
 
 ## License
