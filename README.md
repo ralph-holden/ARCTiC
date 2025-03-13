@@ -67,15 +67,15 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
    - **Description:** Path to the output `.mrc` file where the cleaned tilt series will be saved.
    - **Example:** `'cleaned_TS.mrc'`
 
-3. `--angle_start` `<float>` (Optional, default: `-50`)
+3. `--angle_start` `<float>` (Required)
    - **Description:** The starting tilt angle for visualizing tilt images. 
    - **Example:** `-50`
 
-4. `--angle_step` `<float>` (Optional, default: `2`)
+4. `--angle_step` `<float>` (Required)
    - **Description:** The increment (step size) for the tilt angles between consecutive tilts.
    - **Example:** `2`
 
-5. `--pdf_output` `<path to output PDF file>` (Required)
+5. `--pdf_output` `<path to output PDF file>` (Optional, default: 'output_visualization.pdf')
    - **Description:** Path to the PDF file where the visualizations (tilt angles and excluded images with probability bars) will be saved.
    - **Example:** `'output_visualization.pdf'`
 

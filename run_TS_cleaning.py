@@ -1,13 +1,14 @@
 import torch
+import torch.nn as nn
 import timm
-from torchvision import transforms
-from cryocat import cryomap
-from PIL import Image
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-from matplotlib.backends.backend_pdf import PdfPages  # Import to handle saving multiple figures to a PDF
-import argparse  # Import argparse to handle command-line arguments
+from matplotlib.backends.backend_pdf import PdfPages
+from torchvision import transforms, models
+from cryocat import cryomap
+from PIL import Image
 
 # Define a function to parse command-line arguments
 def parse_arguments():
@@ -16,9 +17,9 @@ def parse_arguments():
     # Define arguments
     parser.add_argument('--input_ts', type=str, required=True, help="Input MRC file")
     parser.add_argument('--cleaned_ts', type=str, required=True, help="Output cleaned MRC file")
-    parser.add_argument('--angle_start', type=float, default=-50, help="Start angle for tilt angle visualization")
-    parser.add_argument('--angle_step', type=float, default=2, help="Step size for angle increment")
-    parser.add_argument('--pdf_output', type=str, required=True, help="Output PDF file for visualizations")
+    parser.add_argument('--angle_start', type=float, required=True, help="Start angle for tilt angle visualization")
+    parser.add_argument('--angle_step', type=float, required=True, help="Step size for angle increment")
+    parser.add_argument('--pdf_output', type=str, default="output_visualization.pdf", help="Output PDF file for visualizations")
     parser.add_argument('--model', type=str, required=True, help="Path to the pre-trained model")
 
     return parser.parse_args()
@@ -38,23 +39,43 @@ MODEL = args.model
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Load the model based on the provided model type
-if 'swin_tiny' in MODEL:
-    model = timm.create_model('swin_tiny_patch4_window7_224', pretrained=False, num_classes=2)
-elif 'swin_large' in MODEL:
-    model = timm.create_model('swin_large_patch4_window7_224', pretrained=False, num_classes=2)
+model_mapping = {
+    'swin_tiny': lambda: timm.create_model('swin_tiny_patch4_window7_224', pretrained=False, num_classes=2),
+    'swin_large': lambda: timm.create_model('swin_large_patch4_window7_224', pretrained=False, num_classes=2),
+    'resnet': lambda: modify_resnet(),
+    'efficientnet': lambda: modify_efficientnet(),
+}
+
+def modify_resnet():
+    model = models.resnet50(pretrained=False)
+    model.fc = nn.Linear(model.fc.in_features, 2)
+    return model
+
+def modify_efficientnet():
+    model = models.efficientnet_b3(pretrained=False)
+    model.classifier[1] = nn.Linear(model.classifier[1].in_features, 2)
+    return model
+
+for key in model_mapping:
+    if key in MODEL:
+        model = model_mapping[key]()
+        break
 else:
-    raise ValueError("MODEL file must contain 'swin_tiny' or 'swin_large'")
+    raise ValueError("MODEL file must contain 'swin_tiny', 'swin_large', 'resnet', or 'efficientnet'")
 
 # Load the model's state_dict
 model.load_state_dict(torch.load(MODEL))
 model = model.to(device)
 model.eval()
+print('The model has been loaded successfully!')
 
 # Define image transformation (match your test_transforms)
+size = (320, 320) if 'efficientnet' in MODEL else (224, 224)
 image_transforms = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize(size),
     transforms.ToTensor(),
 ])
+
 
 def evaluate_single_image(image_input, index, class_0_info, class_1_info):
     # Load and preprocess the image
@@ -92,15 +113,15 @@ prev_text = False
 
 # Create a PDF to store all figures
 with PdfPages(PDF_OUTPUT) as pdf:
-
+    
     # First figure (Tilt Angle Visualization)
     fig = plt.figure(figsize=(5, 5))
     plt.axis('off')
 
     # Evaluate selected slices
+    print('Processing TS now!')
     for i in range(0, mrc.shape[2]):  
         angle = ANGLE_START + i * ANGLE_STEP  # Increment the angle by angle_step for each slice
-        
         image_b16 = cryomap.scale(mrc[:, :, i], 0.0625)
         image_b16 = ((image_b16 - image_b16.min()) * (1 / (image_b16.max() - image_b16.min()) * 255)).astype('uint8')
         image_b16 = Image.fromarray(image_b16)
@@ -137,7 +158,8 @@ with PdfPages(PDF_OUTPUT) as pdf:
     axes = axes.flatten()  # Flatten to iterate easily
 
     fig.subplots_adjust(top=0.8, hspace=0.5, wspace=0.5)
-
+    
+    print('Exporting PDF now!')
     for i, (index, prob) in enumerate(class_0_info):
         # Load the corresponding image_b16 image
         image_b16 = cryomap.scale(mrc[:, :, index], 0.0625)
@@ -175,5 +197,7 @@ with PdfPages(PDF_OUTPUT) as pdf:
     plt.close()
 
 # Stack the tomo3d list to create a 3D volume and save it
+print('Saving cleaned TS!')
 tomo3d = np.stack(tomo3d, axis=2)
 cryomap.write(tomo3d, CLEANED_TS, data_type=np.single)
+print('Process completed successfully!')
