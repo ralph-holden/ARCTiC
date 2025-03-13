@@ -32,7 +32,7 @@ mkdir -p <models>
 ```
 
 *   Download fine-tuned binary and multiclass models from 
-    [owncloud](https://oc.biophys.mpg.de/owncloud/s/zmMZPr2TEB4Bwda)
+    [ownCloud](https://oc.biophys.mpg.de/owncloud/s/zmMZPr2TEB4Bwda)
     and put them into `<models>`. Models are currently available only to reviewers and will be accessible upon publication.
 
 
