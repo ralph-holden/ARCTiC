@@ -30,7 +30,7 @@ CUDA-Enabled PyTorch: The environment uses torch==2.5.0+cu118 (CUDA 11.8).
 1. `torch` – PyTorch for deep learning.
 2. `torchvision` – Computer vision utilities (datasets, transforms, models).
 3. `timm` – Pretrained models from `rwightman/pytorch-image-models`.
-4. `cryocat` – Includes `cryomap`, which seems to be a visualization tool.
+4. `cryocat` – Includes `cryomap` for handling cryo-ET images.
 5. `numpy` – Numerical computing.
 6. `matplotlib` – Visualization library for plots.
 7. `tqdm` – Progress bars.
