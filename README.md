@@ -27,15 +27,15 @@ CUDA-Enabled PyTorch: The environment uses torch==2.5.0+cu118 (CUDA 11.8).
 
 *   The code has the following dependencies:
 
-- `torch` – PyTorch for deep learning.
-- `torchvision` – Computer vision utilities (datasets, transforms, models).
-- `timm` – Pretrained models from `rwightman/pytorch-image-models`.
-- `cryocat` – Includes `cryomap`, which seems to be a visualization tool.
-- `numpy` – Numerical computing.
-- `matplotlib` – Visualization library for plots.
-- `tqdm` – Progress bars.
-- `scikit-learn` – Machine learning utilities, including classification reports and confusion matrices.
-- `pillow` – Image processing (`PIL.Image`).
+1. `torch` – PyTorch for deep learning.
+2. `torchvision` – Computer vision utilities (datasets, transforms, models).
+3. `timm` – Pretrained models from `rwightman/pytorch-image-models`.
+4. `cryocat` – Includes `cryomap`, which seems to be a visualization tool.
+5. `numpy` – Numerical computing.
+6. `matplotlib` – Visualization library for plots.
+7. `tqdm` – Progress bars.
+8. `scikit-learn` – Machine learning utilities, including classification reports and confusion matrices.
+9. `pillow` – Image processing (`PIL.Image`).
 
 ## Fine-tuned Models
 
