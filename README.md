@@ -23,6 +23,20 @@ The environment is based on Python 3.10 and uses Conda (conda-forge channel) wit
 CUDA-Enabled PyTorch: The environment uses torch==2.5.0+cu118 (CUDA 11.8).
 
 
+### Manual installation
+
+*   The code has the following dependencies:
+
+- `torch` – PyTorch for deep learning.
+- `torchvision` – Computer vision utilities (datasets, transforms, models).
+- `timm` – Pretrained models from `rwightman/pytorch-image-models`.
+- `cryocat` – Includes `cryomap`, which seems to be a visualization tool.
+- `numpy` – Numerical computing.
+- `matplotlib` – Visualization library for plots.
+- `tqdm` – Progress bars.
+- `scikit-learn` – Machine learning utilities, including classification reports and confusion matrices.
+- `pillow` – Image processing (`PIL.Image`).
+
 ## Fine-tuned Models
 
 *   Create a directory with fine-tuned models.
