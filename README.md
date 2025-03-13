@@ -55,7 +55,7 @@ mkdir -p <models>
 * To run the script from the command line, use the following syntax:
 
 ```
-python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc' --angle_start -50 --angle_step 2 --pdf_output 'output_visualization.pdf' --model 'models/swin_tiny_fine_tuned.pth'
+python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc' --angle_start -50 --angle_step 2 --pdf_output 'output_visualization.pdf' --model 'models/swin_tiny_fine-tuned.pth'
 ```
 
 ## Arguments:
@@ -81,7 +81,7 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
 
 6. `--model` `<path to model file>` (Required)
    - **Description:** Path to the pre-trained model file (e.g., a Swin transformer model) that will be used for classifying images. The model should be compatible with the network architecture specified in the script.
-   - **Example:** `'models/swin_tiny_fine_tuned.pth'`
+   - **Example:** `'models/swin_tiny_fine-tuned.pth'`
 
 
 ### This command will:
