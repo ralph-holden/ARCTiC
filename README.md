@@ -1,6 +1,7 @@
 # ARCTiC
 Automated Removal of Corrupted Tilts in Cryo-ET
 
+bioRxiv preprint: [https://www.biorxiv.org/content/10.1101/2025.03.13.642992v1](https://www.biorxiv.org/content/10.1101/2025.03.13.642992v1)
 
 ## Installation
 
