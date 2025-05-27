@@ -128,7 +128,6 @@ csv_data = []
 with PdfPages(PDF_OUTPUT) as pdf:
     fig = plt.figure(figsize=(5, 5))
     plt.axis('off')
-    prev_text = False
 
     print("Processing tilt series...")
 
@@ -144,12 +143,9 @@ with PdfPages(PDF_OUTPUT) as pdf:
         if predicted_class:
             tomo3d.append(mrc[:, :, i])
             plt.plot([-np.cos(angle_rad), np.cos(angle_rad)], [-np.sin(angle_rad), np.sin(angle_rad)], color='black')
-            prev_text = False
         else:
             plt.plot([-np.cos(angle_rad), np.cos(angle_rad)], [-np.sin(angle_rad), np.sin(angle_rad)], color='red', linestyle='--')
-            if not prev_text:
-                plt.text(np.cos(angle_rad) * 1.01, np.sin(angle_rad) * 1.09, str(i + 1), fontsize=12, color='red')
-            prev_text = not prev_text
+            plt.text(np.cos(angle_rad) * 1.01, np.sin(angle_rad) * 1.09, str(i), fontsize=5, color='red')
 
         csv_data.append({
             "CurrentIndex": i,
@@ -188,7 +184,7 @@ with PdfPages(PDF_OUTPUT) as pdf:
         cbar.set_ticks([0, 0.5, 1])
         cbar.set_ticklabels(['0%', '50%', '100%'])
 
-        ax.set_title(f"Index: {index+1} | Prob: {prob:.2%}")
+        ax.set_title(f"Index: {index} | Prob: {prob:.2%}")
 
     for j in range(i + 1, len(axes)):
         fig.delaxes(axes[j])
