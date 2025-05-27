@@ -28,15 +28,15 @@ CUDA-Enabled PyTorch: The environment uses torch==2.5.0+cu118 (CUDA 11.8).
 
 *   The code has the following dependencies:
 
-1. `torch` – PyTorch for deep learning.
-2. `torchvision` – Computer vision utilities (datasets, transforms, models).
-3. `timm` – Pretrained models from `rwightman/pytorch-image-models`.
-4. `cryocat` – Includes `cryomap` for handling cryo-ET images.
-5. `numpy` – Numerical computing.
-6. `matplotlib` – Visualization library for plots.
-7. `tqdm` – Progress bars.
-8. `scikit-learn` – Machine learning utilities, including classification reports and confusion matrices.
-9. `pillow` – Image processing (`PIL.Image`).
+1. `torch` â€“ PyTorch for deep learning.
+2. `torchvision` â€“ Computer vision utilities (datasets, transforms, models).
+3. `timm` â€“ Pretrained models from `rwightman/pytorch-image-models`.
+4. `cryocat` â€“ Includes `cryomap` for handling cryo-ET images.
+5. `numpy` â€“ Numerical computing.
+6. `matplotlib` â€“ Visualization library for plots.
+7. `tqdm` â€“ Progress bars.
+8. `scikit-learn` â€“ Machine learning utilities, including classification reports and confusion matrices.
+9. `pillow` â€“ Image processing (`PIL.Image`).
 
 ## Fine-tuned Models
 
@@ -56,7 +56,16 @@ mkdir -p <models>
 * To run the script from the command line, use the following syntax:
 
 ```
-python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc' --angle_start -50 --angle_step 2 --pdf_output 'output_visualization.pdf' --model 'models/swin_tiny_fine-tuned.pth'
+python run_TS_cleaning.py \
+  --input_ts 'input_TS.mrc' \
+  --cleaned_ts 'cleaned_TS.mrc' \
+  --angle_start -50 \
+  --angle_step 2 \
+  --pdf_output 'output_visualization.pdf' \
+  --model 'models/swin_tiny_fine-tuned.pth' \
+  --csv_output 'classification_results.csv' \
+  --mdoc_input 'input_series.mdoc' \
+  --mdoc_output 'cleaned_series.mdoc'
 ```
 
 ## Arguments:
@@ -84,6 +93,18 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
    - **Description:** Path to the pre-trained model file (e.g., a Swin transformer model) that will be used for classifying images. The model should be compatible with the network architecture specified in the script.
    - **Example:** `'models/swin_tiny_fine-tuned.pth'`
 
+7. `--csv_output` `<path to output CSV file>` (Optional)
+   - **Description:** Path where the classification results CSV file will be saved. This CSV lists each slice with flags indicating if it should be removed. Providing this option enables export of slice classification results.
+   - **Example:** `'classification_results.csv'`
+
+8. `--mdoc_input` `<path to input .mdoc file>` (Optional)
+   - **Description:** Path to the .mdoc metadata file associated with the tilt series. Used for removing metadata entries corresponding to corrupted tilts (as determined by the model).
+   - **Example:** `'input_series.mdoc'`
+
+9. `--mdoc_output` `<path to output .mdoc file>` (Optional)
+   - **Description:** Output path for saving the cleaned .mdoc file. **Must be used together with --mdoc_input and --csv_output.**
+   - **Example:** `'cleaned_series.mdoc'`
+
 
 ### This command will:
 
@@ -92,6 +113,8 @@ python run_TS_cleaning.py --input_ts 'input_TS.mrc' --cleaned_ts 'cleaned_TS.mrc
 3. Start tilt visualization at `-50` degrees with a step of `2` degrees.
 4. Generate and save the visualizations (tilt angle and classification probability scale bars) into `output_visualization.pdf`.
 5. Save the cleaned tilt series to `cleaned_TS.mrc`.
+6. Export classification results (indices and probabilities) to a CSV file `classification_results.csv`.
+7. If a corresponding `input_series.mdoc` file is provided, generate a cleaned version `cleaned_series.mdoc` by removing entries of excluded tilts.
 
 
 ## Additional Notes
