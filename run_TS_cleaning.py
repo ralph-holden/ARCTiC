@@ -3,49 +3,54 @@ import torch.nn as nn
 import timm
 import argparse
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from matplotlib.backends.backend_pdf import PdfPages
 from torchvision import transforms, models
-from cryocat import cryomap
+from cryocat import cryomap, mdoc
 from PIL import Image
+import os
 
-# Define a function to parse command-line arguments
+# -----------------------------
+# Parse command-line arguments
+# -----------------------------
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Process images using a pre-trained model.")
-    
-    # Define arguments
-    parser.add_argument('--input_ts', type=str, required=True, help="Input MRC file")
-    parser.add_argument('--cleaned_ts', type=str, required=True, help="Output cleaned MRC file")
-    parser.add_argument('--angle_start', type=float, required=True, help="Start angle for tilt angle visualization")
-    parser.add_argument('--angle_step', type=float, required=True, help="Step size for angle increment")
-    parser.add_argument('--pdf_output', type=str, default="output_visualization.pdf", help="Output PDF file for visualizations")
-    parser.add_argument('--model', type=str, required=True, help="Path to the pre-trained model")
+    parser = argparse.ArgumentParser(description="Clean Cryo-ET Tilt Series with Deep Learning.")
+
+    parser.add_argument('--input_ts', type=str, required=True, help="Input .mrc tilt series")
+    parser.add_argument('--cleaned_ts', type=str, required=True, help="Output cleaned .mrc tilt series")
+    parser.add_argument('--angle_start', type=float, required=True, help="Start tilt angle")
+    parser.add_argument('--angle_step', type=float, required=True, help="Angle step per slice")
+    parser.add_argument('--pdf_output', type=str, default="output_visualization.pdf", help="Output PDF visualization")
+    parser.add_argument('--csv_output', type=str, default="results.csv", help="Output CSV with classification")
+    parser.add_argument('--model', type=str, required=True, help="Path to model .pth file")
+    parser.add_argument('--mdoc_input', type=str, help="Optional: Path to input .mdoc file")
+    parser.add_argument('--mdoc_output', type=str, help="Optional: Path to output cleaned .mdoc file")
 
     return parser.parse_args()
 
-# Parse the command-line arguments
 args = parse_arguments()
 
-# Assign parsed arguments to variables
+# -----------------------------
+# Assign arguments to variables
+# -----------------------------
 INPUT_TS = args.input_ts
 CLEANED_TS = args.cleaned_ts
 ANGLE_START = args.angle_start
 ANGLE_STEP = args.angle_step
 PDF_OUTPUT = args.pdf_output
+CSV_OUTPUT = args.csv_output
 MODEL = args.model
 
-# Set device to GPU if available
+# -----------------------------
+# Setup device (GPU if available)
+# -----------------------------
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# Load the model based on the provided model type
-model_mapping = {
-    'swin_tiny': lambda: timm.create_model('swin_tiny_patch4_window7_224', pretrained=False, num_classes=2),
-    'swin_large': lambda: timm.create_model('swin_large_patch4_window7_224', pretrained=False, num_classes=2),
-    'resnet': lambda: modify_resnet(),
-    'efficientnet': lambda: modify_efficientnet(),
-}
-
+# -----------------------------
+# Model selection and loading
+# -----------------------------
 def modify_resnet():
     model = models.resnet50(pretrained=False)
     model.fc = nn.Linear(model.fc.in_features, 2)
@@ -56,148 +61,168 @@ def modify_efficientnet():
     model.classifier[1] = nn.Linear(model.classifier[1].in_features, 2)
     return model
 
+model_mapping = {
+    'swin_tiny': lambda: timm.create_model('swin_tiny_patch4_window7_224', pretrained=False, num_classes=2),
+    'swin_large': lambda: timm.create_model('swin_large_patch4_window7_224', pretrained=False, num_classes=2),
+    'resnet': lambda: modify_resnet(),
+    'efficientnet': lambda: modify_efficientnet(),
+}
+
 for key in model_mapping:
     if key in MODEL:
         model = model_mapping[key]()
         break
 else:
-    raise ValueError("MODEL file must contain 'swin_tiny', 'swin_large', 'resnet', or 'efficientnet'")
+    raise ValueError("MODEL must contain 'swin_tiny', 'swin_large', 'resnet', or 'efficientnet'")
 
-# Load the model's state_dict
-model.load_state_dict(torch.load(MODEL))
+model.load_state_dict(torch.load(MODEL, map_location=device))
 model = model.to(device)
 model.eval()
-print('The model has been loaded successfully!')
+print("Model loaded successfully.")
 
-# Define image transformation (match your test_transforms)
+# -----------------------------
+# Image preprocessing
+# -----------------------------
 size = (320, 320) if 'efficientnet' in MODEL else (224, 224)
 image_transforms = transforms.Compose([
     transforms.Resize(size),
     transforms.ToTensor(),
 ])
 
-
+# -----------------------------
+# Evaluation function
+# -----------------------------
 def evaluate_single_image(image_input, index, class_0_info, class_1_info):
-    # Load and preprocess the image
     if isinstance(image_input, str):
         image = Image.open(image_input).convert("RGB")
-    elif isinstance(image_input, Image.Image):
+    else:
         image = image_input
+
     image = image_transforms(image).unsqueeze(0).to(device)
 
-    # Forward pass through the model
     with torch.no_grad():
         output = model(image)
         probabilities = torch.softmax(output, dim=1).cpu().numpy()[0]
 
-    # Display probabilities and classification
     predicted_class = np.argmax(probabilities)
 
     if predicted_class == 0:
-        class_0_info.append((index, probabilities[0]))  # Append index and probability for class 0
+        class_0_info.append((index, probabilities[0]))
     else:
-        class_1_info.append((index, probabilities[1]))  # Append index and probability for class 1
+        class_1_info.append((index, probabilities[1]))
 
-    return predicted_class
+    return predicted_class, probabilities
 
-
-# Initialize variables
-mrc = cryomap.read(f"{INPUT_TS}")
-
+# -----------------------------
+# Load tilt series
+# -----------------------------
+mrc = cryomap.read(INPUT_TS)
 tomo3d = []
-class_0_info = []  # To store (index, probability) for class 0
-class_1_info = []  # To store (index, probability) for class 1
+class_0_info = []
+class_1_info = []
+csv_data = []
 
-# Plot setup
-prev_text = False
-
-# Create a PDF to store all figures
+# -----------------------------
+# PDF output setup
+# -----------------------------
 with PdfPages(PDF_OUTPUT) as pdf:
-    
-    # First figure (Tilt Angle Visualization)
     fig = plt.figure(figsize=(5, 5))
     plt.axis('off')
+    prev_text = False
 
-    # Evaluate selected slices
-    print('Processing TS now!')
-    for i in range(0, mrc.shape[2]):  
-        angle = ANGLE_START + i * ANGLE_STEP  # Increment the angle by angle_step for each slice
+    print("Processing tilt series...")
+
+    for i in range(mrc.shape[2]):
+        angle = ANGLE_START + i * ANGLE_STEP
         image_b16 = cryomap.scale(mrc[:, :, i], 0.0625)
-        image_b16 = ((image_b16 - image_b16.min()) * (1 / (image_b16.max() - image_b16.min()) * 255)).astype('uint8')
-        image_b16 = Image.fromarray(image_b16)
-        
-        if image_b16.mode != 'RGB':
-            image_b16 = image_b16.convert('RGB')
+        image_b16 = ((image_b16 - image_b16.min()) * (255.0 / (image_b16.max() - image_b16.min()))).astype('uint8')
+        image_b16 = Image.fromarray(image_b16).convert("RGB")
 
-        correct_tilt = evaluate_single_image(image_b16, i, class_0_info, class_1_info)
-        angle = np.radians(angle)   # Convert angle to radians for plotting
-        if correct_tilt:
+        predicted_class, probs = evaluate_single_image(image_b16, i, class_0_info, class_1_info)
+
+        angle_rad = np.radians(angle)
+        if predicted_class:
             tomo3d.append(mrc[:, :, i])
-            plt.plot([-np.cos(angle), np.cos(angle)], [-np.sin(angle), np.sin(angle)], color='black', linewidth=1)
+            plt.plot([-np.cos(angle_rad), np.cos(angle_rad)], [-np.sin(angle_rad), np.sin(angle_rad)], color='black')
             prev_text = False
         else:
-            plt.plot([-np.cos(angle), np.cos(angle)], [-np.sin(angle), np.sin(angle)], color='red', linewidth=1, linestyle='--')
+            plt.plot([-np.cos(angle_rad), np.cos(angle_rad)], [-np.sin(angle_rad), np.sin(angle_rad)], color='red', linestyle='--')
             if not prev_text:
-                plt.text(np.cos(angle) * 1.01, np.sin(angle) * 1.09, str(i+1), fontsize=12, color='red')
+                plt.text(np.cos(angle_rad) * 1.01, np.sin(angle_rad) * 1.09, str(i + 1), fontsize=12, color='red')
             prev_text = not prev_text
 
-    # Add caption to the first page
-    fig.text(0.5, 0.95, "Tilt Angle Visualization", ha='center', fontsize=14, weight='bold')
+        csv_data.append({
+            "CurrentIndex": i,
+            "ToBeRemoved": predicted_class == 0,
+            "Removed": False
+        })
 
-    # Save the first figure to the PDF
+    fig.text(0.5, 0.95, "Tilt Angle Visualization", ha='center', fontsize=14, weight='bold')
     pdf.savefig()
     plt.close()
 
-    # Second figure (Images with Probability Scale Bar)
+    # Plot probability bars for class 0
     num_images = len(class_0_info)
-    cols = 3  # Number of columns in the grid layout
+    cols = 3
     rows = (num_images // cols) + (num_images % cols > 0)
-
-    # Create a new figure for images with probability scale bar
     fig, axes = plt.subplots(rows, cols, figsize=(10, rows * 3))
-    axes = axes.flatten()  # Flatten to iterate easily
-
+    axes = axes.flatten()
     fig.subplots_adjust(top=0.8, hspace=0.5, wspace=0.5)
-    
-    print('Exporting PDF now!')
+
     for i, (index, prob) in enumerate(class_0_info):
-        # Load the corresponding image_b16 image
         image_b16 = cryomap.scale(mrc[:, :, index], 0.0625)
-        image_b16 = ((image_b16 - image_b16.min()) * (1 / (image_b16.max() - image_b16.min()) * 255)).astype('uint8')
+        image_b16 = ((image_b16 - image_b16.min()) * (255.0 / (image_b16.max() - image_b16.min()))).astype('uint8')
         image_b16 = Image.fromarray(image_b16)
 
-        # Display image on subplot
         ax = axes[i]
         ax.imshow(image_b16, cmap='gray')
-        ax.axis('off')  # Remove axis for cleaner presentation
+        ax.axis('off')
 
-        colors = ['red'] * int(prob * 100) + ['black'] * int((1 - prob) * 100)
+        colors = ['red'] * int(prob * 100) + ['black'] * (100 - int(prob * 100))
         discrete_cmap = ListedColormap(colors)
 
-        # Add probability scale bar next to each image
         cbar = fig.colorbar(
             plt.cm.ScalarMappable(cmap=discrete_cmap, norm=plt.Normalize(vmin=0, vmax=1)),
             ax=ax, orientation='vertical', fraction=0.046, pad=0.04
         )
         cbar.set_ticks([0, 0.5, 1])
-        cbar.set_ticklabels([f'{int(t * 100)}%' for t in [0, 0.5, 1]])
+        cbar.set_ticklabels(['0%', '50%', '100%'])
 
-        # Title showing image index and probability
         ax.set_title(f"Index: {index+1} | Prob: {prob:.2%}")
 
-    # Remove any unused subplots
     for j in range(i + 1, len(axes)):
         fig.delaxes(axes[j])
 
-    # Add caption to the second page
     fig.text(0.5, 0.9, "Excluded Tilt Images with Probability Scale Bar", ha='center', fontsize=14, weight='bold')
-
-    # Save the second figure to the PDF
     pdf.savefig()
     plt.close()
 
-# Stack the tomo3d list to create a 3D volume and save it
-print('Saving cleaned TS!')
+# -----------------------------
+# Save cleaned .mrc volume
+# -----------------------------
+print("Saving cleaned tilt series...")
 tomo3d = np.stack(tomo3d, axis=2)
 cryomap.write(tomo3d, CLEANED_TS, data_type=np.single)
-print('Process completed successfully!')
+print("Saved to:", CLEANED_TS)
+
+# -----------------------------
+# Save classification results to CSV
+# -----------------------------
+df = pd.DataFrame(csv_data)
+df.to_csv(CSV_OUTPUT, index=False)
+print("Saved classification results to:", CSV_OUTPUT)
+
+# -----------------------------
+# Optional: Clean .mdoc file
+# -----------------------------
+if args.mdoc_input and args.mdoc_output:
+    print("Cleaning associated .mdoc file...")
+    df = pd.read_csv(CSV_OUTPUT)
+    indices_to_remove = df[df["ToBeRemoved"] == True]["CurrentIndex"].tolist()
+
+    my_mdoc = mdoc.Mdoc(args.mdoc_input)
+    my_mdoc.remove_images(indices_to_remove, kept_only=False)
+    my_mdoc.write(out_path=args.mdoc_output, overwrite=True)
+    print("Cleaned .mdoc file saved to:", args.mdoc_output)
+
+print("Process completed successfully.")
