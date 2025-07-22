@@ -196,10 +196,13 @@ with PdfPages(PDF_OUTPUT) as pdf:
 # -----------------------------
 # Save cleaned .mrc volume
 # -----------------------------
-print("Saving cleaned tilt series...")
-tomo3d = np.stack(tomo3d, axis=2)
-cryomap.write(tomo3d, CLEANED_TS, data_type=np.single)
-print("Saved to:", CLEANED_TS)
+if len(tomo3d) == 0:
+    print("Warning: All tilt images were excluded. No cleaned tilt series was saved.")
+else:
+    print("Saving cleaned tilt series...")
+    tomo3d = np.stack(tomo3d, axis=2)
+    cryomap.write(tomo3d, CLEANED_TS, data_type=np.single)
+    print("Saved to:", CLEANED_TS)
 
 # -----------------------------
 # Save classification results to CSV
@@ -212,13 +215,16 @@ print("Saved classification results to:", CSV_OUTPUT)
 # Optional: Clean .mdoc file
 # -----------------------------
 if args.mdoc_input and args.mdoc_output:
-    print("Cleaning associated .mdoc file...")
-    df = pd.read_csv(CSV_OUTPUT)
-    indices_to_remove = df[df["ToBeRemoved"] == True]["CurrentIndex"].tolist()
+    if len(tomo3d) == 0:
+        print("No images kept. Skipping .mdoc cleanup.")
+    else:
+        print("Cleaning associated .mdoc file...")
+        df = pd.read_csv(CSV_OUTPUT)
+        indices_to_remove = df[df["ToBeRemoved"] == True]["CurrentIndex"].tolist()
 
-    my_mdoc = mdoc.Mdoc(args.mdoc_input)
-    my_mdoc.remove_images(indices_to_remove, kept_only=False)
-    my_mdoc.write(out_path=args.mdoc_output, overwrite=True)
-    print("Cleaned .mdoc file saved to:", args.mdoc_output)
+        my_mdoc = mdoc.Mdoc(args.mdoc_input)
+        my_mdoc.remove_images(indices_to_remove, kept_only=False)
+        my_mdoc.write(out_path=args.mdoc_output, overwrite=True)
+        print("Cleaned .mdoc file saved to:", args.mdoc_output)
 
 print("Process completed successfully.")
