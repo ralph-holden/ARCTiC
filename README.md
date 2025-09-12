@@ -1,7 +1,7 @@
 # ARCTiC
 Automated Removal of Corrupted Tilts in Cryo-ET
 
-bioRxiv preprint: [https://www.biorxiv.org/content/10.1101/2025.03.13.642992v1](https://www.biorxiv.org/content/10.1101/2025.03.13.642992v1)
+Published in JSBX: [https://www.sciencedirect.com/science/article/pii/S259015242500011X](https://www.sciencedirect.com/science/article/pii/S259015242500011X)
 
 ## Installation
 
@@ -130,3 +130,23 @@ python run_TS_cleaning.py \
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+## Citation
+
+### APA format
+
+Majtner, T., et al. (2025). Automated removal of corrupted tilts in cryo-electron tomography. *Journal of Structural Biology: X, 12*, 100130. Elsevier. https://doi.org/10.1016/j.yjsbx.2025.100130
+
+### BibTeX entry
+
+```bibtex
+@article{Majtner2025,
+  author    = {Majtner, T. and Turoňová, B.},
+  title     = {Automated removal of corrupted tilts in cryo-electron tomography},
+  journal   = {Journal of Structural Biology: X},
+  year      = {2025},
+  volume    = {12},
+  pages     = {100130},
+  doi       = {10.1016/j.yjsbx.2025.100130},
+  publisher = {Elsevier}
+}
