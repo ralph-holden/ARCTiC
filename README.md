@@ -1,9 +1,9 @@
-# ARCTiC
-Automated Removal of Corrupted Tilts in Cryo-ET
+# 🧊 ARCTiC ❄️
+**A**utomated **R**emoval of **C**orrupted **T**ilts **i**n **C**ryo-ET
 
-Published in JSBX: [https://www.sciencedirect.com/science/article/pii/S259015242500011X](https://www.sciencedirect.com/science/article/pii/S259015242500011X)
+📄 Published in [*Journal of Structural Biology: X*](https://www.sciencedirect.com/science/article/pii/S259015242500011X)
 
-## Installation
+## ⚙️ Installation
 
 *   Get ARCTiC source codes
 
@@ -38,7 +38,7 @@ CUDA-Enabled PyTorch: The environment uses torch==2.5.0+cu118 (CUDA 11.8).
 8. `scikit-learn` – Machine learning utilities, including classification reports and confusion matrices.
 9. `pillow` – Image processing (`PIL.Image`).
 
-## Fine-tuned Models
+## 🧠 Fine-tuned Models
 
 *   Create a directory with fine-tuned models.
 
@@ -51,7 +51,7 @@ mkdir -p <models>
     and put them into `<models>`.
 
 
-## Usage
+## 🚀 Usage
 
 * To run the script from the command line, use the following syntax:
 
@@ -68,7 +68,7 @@ python run_TS_cleaning.py \
   --mdoc_output 'cleaned_series.mdoc'
 ```
 
-## Arguments:
+## 🧾 Arguments:
 1. `--input_ts` `<path to input .mrc file>` (Required)
    - **Description:** Path to the input `.mrc` file, which contains the tilt series data to be processed.
    - **Example:** `'input_TS.mrc'`
@@ -122,16 +122,16 @@ python run_TS_cleaning.py \
 - Ensure that the model file (`.pth`) is compatible with the architecture defined in the script (e.g., `swin_tiny` or `swin_large`).
 
 
-## Jupyter Notebooks
+## 📓 Jupyter Notebooks
 
 - In the `notebooks` directory, there are additional Jupyter Notebooks that were used for augmentation (`augmentation.ipynb`), data split (`split_train_val_test.ipynb`), and examples of training and evaluation scripts.
 
 
-## License
+## 📜 License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
-## Citation
+## 📚 Citation
 
 ### APA format
 
