@@ -139,6 +139,8 @@ with PdfPages(PDF_OUTPUT) as pdf:
 
         predicted_class, probs = evaluate_single_image(image_b16, i, class_0_info, class_1_info)
 
+        # ***************** edit here to flag ambigious/ low confidence predictions ***********
+
         angle_rad = np.radians(angle)
         if predicted_class:
             tomo3d.append(mrc[:, :, i])
