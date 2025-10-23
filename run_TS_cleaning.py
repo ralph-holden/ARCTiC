@@ -13,6 +13,10 @@ from PIL import Image
 import os
 
 # -----------------------------
+
+# -----------------------------
+
+# -----------------------------
 # Parse command-line arguments
 # -----------------------------
 def parse_arguments():
@@ -27,7 +31,8 @@ def parse_arguments():
     parser.add_argument('--model', type=str, required=True, help="Path to model .pth file")
     parser.add_argument('--mdoc_input', type=str, help="Optional: Path to input .mdoc file")
     parser.add_argument('--mdoc_output', type=str, help="Optional: Path to output cleaned .mdoc file")
-
+    parser.add_argument('--confidence_threshold', type=float, default=0.0, help="Minimum probability required to use prediction")
+    
     return parser.parse_args()
 
 args = parse_arguments()
@@ -42,6 +47,7 @@ ANGLE_STEP = args.angle_step
 PDF_OUTPUT = args.pdf_output
 CSV_OUTPUT = args.csv_output
 MODEL = args.model
+CONFIDENCE_THRESHOLD = args.confidence_threshold
 
 # -----------------------------
 # Setup device (GPU if available)
@@ -104,13 +110,17 @@ def evaluate_single_image(image_input, index, class_0_info, class_1_info):
         output = model(image)
         probabilities = torch.softmax(output, dim=1).cpu().numpy()[0]
 
-    predicted_class = np.argmax(probabilities)
+    # * * * Make ambiguous / low confidence flag here * * *
+    predicted_class   = np.argmax(probabilities) 
+    is_low_confidence = np.max(probabilities) < CONFIDENCE_THRESHOLD
 
-    if predicted_class == 0:
-        class_0_info.append((index, probabilities[0]))
-    else:
+    if predicted_class == 0 and not is_low_confidence:
+        class_0_info.append((index, probabilities[0])) # class for removals
+    elif not is_low_confidence:
         class_1_info.append((index, probabilities[1]))
-
+    else:
+        class_null_info.append((index, probabilities[np.argmax(probabilities)])) # set aside low confidence cases to extra output
+        
     return predicted_class, probabilities
 
 # -----------------------------
@@ -120,6 +130,7 @@ mrc = cryomap.read(INPUT_TS)
 tomo3d = []
 class_0_info = []
 class_1_info = []
+class_null_info = [] # add ambiguous cases to this class!
 csv_data = []
 
 # -----------------------------
@@ -139,10 +150,10 @@ with PdfPages(PDF_OUTPUT) as pdf:
 
         predicted_class, probs = evaluate_single_image(image_b16, i, class_0_info, class_1_info)
 
-        # ***************** edit here to flag ambigious/ low confidence predictions ***********
+        is_low_confidence = np.max(probs) < CONFIDENCE_INTERVAL
 
         angle_rad = np.radians(angle)
-        if predicted_class:
+        if predicted_class or is_low_confidence:
             tomo3d.append(mrc[:, :, i])
             plt.plot([-np.cos(angle_rad), np.cos(angle_rad)], [-np.sin(angle_rad), np.sin(angle_rad)], color='black')
         else:
@@ -151,7 +162,8 @@ with PdfPages(PDF_OUTPUT) as pdf:
 
         csv_data.append({
             "CurrentIndex": i,
-            "ToBeRemoved": predicted_class == 0,
+            "ToBeRemoved": predicted_class == 0 and not is_low_confidence,
+            "Confidence": np.round(np.max(predictions),decimals=2),  # save the confidence value -from probability prediction
             "Removed": False
         })
 
