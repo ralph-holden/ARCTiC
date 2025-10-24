@@ -150,7 +150,7 @@ with PdfPages(PDF_OUTPUT) as pdf:
 
         predicted_class, probs = evaluate_single_image(image_b16, i, class_0_info, class_1_info)
 
-        is_low_confidence = np.max(probs) < CONFIDENCE_INTERVAL
+        is_low_confidence = np.max(probs) < CONFIDENCE_THRESHOLD
 
         angle_rad = np.radians(angle)
         if predicted_class or is_low_confidence:
@@ -162,8 +162,8 @@ with PdfPages(PDF_OUTPUT) as pdf:
 
         csv_data.append({
             "CurrentIndex": i,
-            "ToBeRemoved": predicted_class == 0 and not is_low_confidence,
-            "Confidence": np.round(np.max(predictions),decimals=2),  # save the confidence value -from probability prediction
+            "ToBeRemoved": predicted_class == 0,
+            "Confident": (not is_low_confidence, np.round(np.max(probs),decimals=2)),  # save the confidence value -from probability prediction
             "Removed": False
         })
 
