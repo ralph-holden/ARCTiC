@@ -110,14 +110,14 @@ def evaluate_single_image(image_input, index, class_0_info, class_1_info):
         output = model(image)
         probabilities = torch.softmax(output, dim=1).cpu().numpy()[0]
 
-    # * * * Make ambiguous / low confidence flag here * * *
+    # Flag low confidence predictions
     predicted_class   = np.argmax(probabilities) 
     is_low_confidence = np.max(probabilities) < CONFIDENCE_THRESHOLD
 
     if predicted_class == 0 and not is_low_confidence:
         class_0_info.append((index, probabilities[0])) # class for removals
     elif not is_low_confidence:
-        class_1_info.append((index, probabilities[1]))
+        class_1_info.append((index, probabilities[1])) 
     else:
         class_null_info.append((index, probabilities[np.argmax(probabilities)])) # set aside low confidence cases to extra output
         
@@ -163,7 +163,8 @@ with PdfPages(PDF_OUTPUT) as pdf:
         csv_data.append({
             "CurrentIndex": i,
             "ToBeRemoved": predicted_class == 0,
-            "Confident": (not is_low_confidence, np.round(np.max(probs),decimals=2)),  # save the confidence value -from probability prediction
+            "Probability": np.round(np.max(probs),decimals=2),
+            "Confident": not is_low_confidence,  # save the confidence value -from probability prediction
             "Removed": False
         })
 
